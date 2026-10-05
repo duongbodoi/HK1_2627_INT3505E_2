@@ -15,7 +15,8 @@
 ## Bài 6
 <img width="1098" height="638" alt="image" src="https://github.com/user-attachments/assets/ee65f300-3bb2-41eb-8547-21a3f4f6ed3a" />
 
-
+# Sesion_2( trong file md)
+# Section_3 (trong file md)
 
 
 
