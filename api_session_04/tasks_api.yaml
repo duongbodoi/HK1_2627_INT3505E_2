@@ -1,0 +1,178 @@
+openapi: 3.0.3
+info:
+  title: Tasks API 
+  version: '1.0.0'
+  description: Quản lí task nội bộ
+  contact:
+    name: Nguyễn Tùng Dương
+    email: duongbodoi112@gmail.com
+servers:
+  - url: https://localhost:5000/v1
+    description: Máy chủ
+paths:
+  /tasks/{taskId}:
+    parameters:
+      - name: taskId
+        description: Mã định danh task
+        in: path
+        required: true
+        schema:
+          $ref : '#/components/schemas/taskIdParam'
+    get:
+      summary: Xem task theo id
+      operationId: getTaskById
+      responses: 
+        '200':
+          description: Tìm thấy task 
+          content: 
+            application/json: 
+              schema: 
+                $ref : '#/components/schemas/task'
+        '404':
+          description: Không tìm thấy task id tương ứng
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+    patch:
+      summary: Edit task
+      description: Chỉ gửi các trường cần thay đổi
+      requestBody: 
+        required: true
+        content: 
+          application/json: 
+            schema: 
+              $ref: '#/components/schemas/taskInput'
+      responses: 
+        '200':
+          description: Edit thành công 
+          content: 
+            application/json: 
+              schema: 
+                $ref : '#/components/schemas/task'
+        '404':
+          description: task không tồn tại
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+    delete:
+      summary: Xoá task
+      responses: 
+        '204':
+          description: Xóa thành công
+        '404':
+          description: task không tồn tại
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/NotFoundErrorResponse'  
+  /tasks:
+    get:
+      summary: Danh sách task
+      description: Trả về danh sách các task có hộ trợ filter
+      parameters: 
+        - name: status
+          in: query
+          required: false
+          description: Lọc theo trạng thái
+          schema: 
+            enum: [inProgress, done, overdue]
+            default: inProgress
+      responses: 
+        '200':
+          description: Lấy danh sách thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/task'
+    post:
+      summary: Tạo mới 1 task
+      description: Tạo mới 1 bản ghi task vào cơ sở dữ liệu
+      requestBody: 
+        required: true
+        content: 
+          application/json: 
+            schema:
+              $ref: '#/components/schemas/taskInput'
+      responses: 
+        '201':
+          description: Thêm thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/task'
+        '400':
+          description: Bad request
+          content:
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+
+
+components:
+  schemas:
+    taskIdParam:
+      type: integer
+      format: int64
+    taskInput:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Công việc A"
+        status:
+          type: string
+          enum: [inProgress,done,overdue]
+          example: "done"
+        priority:
+          type: string
+          enum: [high,nomal,low]
+          example: "high"
+        dueDate:
+          type: string
+          example: "23/11/2026"
+        assigneeId:
+          type: integer
+          example: 24021443
+    task:
+      allOf: 
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 102
+        - $ref: '#/components/schemas/taskInput'
+    NotFoundErrorResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: "about:blank"
+          description: "Đường dẫn URI định danh kiểu lỗi."
+        title:
+          type: string
+          example: "Not Found"
+          description: "Tiêu đề ngắn gọn về lỗi."
+        status:
+          type: integer
+          example: 404
+          description: "Mã trạng thái HTTP."
+        detail:
+          type: string
+          example: "The requested resource was not found."
+          description: "Chi tiết nguyên nhân lỗi xảy ra."
+        instance:
+          type: string
+          example: "/api/v1/tasks/123"
+          description: "Đường dẫn URI của request gây ra lỗi."
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+

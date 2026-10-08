@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: Petstore 24021443_Nguyễn Tùng Dương
+  description: Đặc tả API mẫu quản lý cửa hàng thú cưng dựa trên chuẩn OpenAPI.
+  version: 1.0.0
+servers:
+  - url: https://api.petstore.example.com/v1
+    description: Máy chủ thử nghiệm (Staging)
+
+paths:
+  /pets:
+    get:
+      summary: Lấy danh sách thú cưng
+      description: Trả về danh sách thú cưng trong cửa hàng, có hỗ trợ lọc theo trạng thái.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Trạng thái của thú cưng cần lọc
+          schema:
+            type: string
+            enum: [available, pending, sold]
+            default: available
+      responses:
+        '200':
+          description: Lấy danh sách thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+
+    post:
+      summary: Thêm thú cưng mới
+      description: Tạo mới một bản ghi thú cưng vào cơ sở dữ liệu.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetInput'
+      responses:
+        '201':
+          description: Thêm mới thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '400':
+          description: Dữ liệu đầu vào không hợp lệ
+
+  /pets/{petId}:
+    get:
+      summary: Xem chi tiết thú cưng theo ID
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          description: Mã định danh của thú cưng
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Tìm thấy thông tin thú cưng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Không tìm thấy thú cưng với ID tương ứng
+
+    put:
+      summary: Cập nhật thông tin thú cưng
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetInput'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+        '404':
+          description: Thú cưng không tồn tại
+
+    delete:
+      summary: Xóa thú cưng
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Xóa thành công (không trả về dữ liệu)
+        '404':
+          description: Thú cưng không tồn tại
+
+components:
+  schemas:
+    PetInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "Cậu Vàng"
+        category:
+          type: string
+          example: "Chó Shiba"
+        status:
+          type: string
+          enum: [available, pending, sold]
+          example: "available"
+
+    Pet:
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 101
+        - $ref: '#/components/schemas/PetInput'
