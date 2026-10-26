@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: API social-network 24021443_Nguyễn Tùng Dương
+  description: Đặc tả API social-network
+  version: 1.0.0
+servers:
+  - url: https://api.social-network.example.com/v1
+    description: Máy chủ thử nghiệm (Staging)
+
+paths:
+  /auth/login:
+    post:
+      security: []
+      description: Thông tin đăng nhập
+      requestBody:
+        required: true
+        content:
+          application/json: 
+            schema: 
+              $ref: '#/components/schemas/Login'
+      responses:
+        '200':
+          description: đăng nhập thành công
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'               
+        '500':
+          $ref: '#/components/responses/500InternalError'
+        '429':
+          $ref: '#/components/responses/429TooManyRequests'  
+  /auth/refresh:
+    post:
+      security: []
+      requestBody:
+        required: true
+        content: 
+          application/json: 
+            schema: 
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Trả acessToken thành công
+          content: 
+            application/json: 
+              schema: 
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+  /posts/{id}:
+    parameters: 
+      - name: id 
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      security:
+        - oauth2: [read:posts]
+      responses: 
+        '200':
+          description: Trả về thành công
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Post' }
+        '403':
+          description: Không có quyền truy cập (Thiếu Role/Scope hoặc không phải chủ sở hữu)
+        '400': { $ref: '#/components/responses/400BadRequest' }
+        '401': { $ref: '#/components/responses/401Unauthorized' }
+        '404': { $ref: '#/components/responses/404NotFound' }
+        '500': { $ref: '#/components/responses/500InternalError' }
+
+        
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    basicAuth:
+      type: http
+      scheme: basicAuth
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    oauth2:
+      type: oauth2
+      description: Nhập JWT Token có chứa các scope tương ứng.
+      flows:
+        authorizationCode: # Hoặc clientCredentials / implicit tùy mô hình
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            read:users: Quyền xem thông tin người dùng
+            write:users: Quyền tạo/sửa thông tin người dùng
+            delete:users: Quyền xóa người dùng
+            admin:all: Quyền quản trị toàn hệ thống
+            read:posts: Quyền xem bài viết
+  schemas:
+    Post:
+      type: object
+      required:
+        - id
+        - authorId
+        - content
+        - visibility
+        - createdAt
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          readOnly: true
+          example: 101
+        authorId:
+          type: integer
+          description: ID người đăng bài
+          example: 7
+        content:
+          type: string
+          maxLength: 5000
+          example: "Hôm nay trời đẹp quá!"
+        imageUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          example: ["https://cdn.social-network.example.com/img/abc.jpg"]
+        visibility:
+          type: string
+          enum: [public, friends, private]
+          description: Phạm vi hiển thị, dùng để kiểm tra quyền xem (trả 403/404 nếu không đủ quyền)
+          example: "public"
+        likeCount:
+          type: integer
+          minimum: 0
+          readOnly: true
+          example: 12
+        commentCount:
+          type: integer
+          minimum: 0
+          readOnly: true
+          example: 3
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: "2026-10-26T15:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          example: "2026-10-26T16:00:00Z"
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh Token đang sở hữu
+          example: "d9b2d63d-cead-48b4-94ed-1088b5b7b61f"
+      required:
+        - refreshToken
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT Access Token dùng để truy cập API (Hạn ngắn)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh Token dùng để lấy access token mới (Hạn dài)
+          example: "d9b2d63d-cead-48b4-94ed-1088b5b7b61f"
+        tokenType:
+          type: string
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Thời gian sống của access token (tính bằng giây)
+          example: 3600
+      required:
+        - accessToken
+        - refreshToken
+    Login:
+      type: object  
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "duongbodoiquaa"
+        password:
+          type: string
+          description: Mật khẩu chứ chữ hoa chữ thường và 1 kí tự đặc biệt
+          example: "Tduong1911."
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "INVALID_INPUT"
+        message:
+          type: string
+          example: "Dữ liệu gửi lên không hợp lệ."
+        details:
+          type: array
+          items:
+            type: string
+          example: ["chưa điền mật khẩu","chưa điền tên đăng nhập"]
+
+  responses:
+      400BadRequest:
+        description: Dữ liệu yêu cầu không hợp lệ (Lỗi cú pháp hoặc thiếu trường bắt buộc).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+      401Unauthorized:
+        description: Chưa xác thực hoặc xác thực thất bại.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+            examples:
+              invalidCredentials:
+                summary: Sai username/password (login)
+                value:
+                  code: "INVALID_CREDENTIALS"
+                  message: "Tên đăng nhập hoặc mật khẩu không đúng."
+              tokenExpired:
+                summary: Token hết hạn hoặc bị thu hồi
+                value:
+                  code: "TOKEN_EXPIRED"
+                  message: "Token đã hết hạn."
+              missingToken:
+                summary: Không gửi token
+                value:
+                  code: "MISSING_TOKEN"
+                  message: "Thiếu header Authorization."
+      403Forbidden:
+        description: Không có quyền truy cập (Ví dụ tài khoản User cố truy cập tính năng Admin).
+      404NotFound:
+        description: Không tìm thấy tài nguyên yêu cầu.
+      500InternalError:
+        description: Lỗi hệ thống phía Server.
+      429TooManyRequests:
+        description: Gửi quá nhiều yêu cầu (chống brute-force).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErrorResponse'
+      
