@@ -4,7 +4,7 @@ info:
   description: Đặc tả API social-network
   version: 1.0.0
 servers:
-  - url: https://api.social-network.example.com/v1
+  - url: http://localhost:8000/api/v1
     description: Máy chủ thử nghiệm (Staging)
 
 paths:
@@ -12,6 +12,7 @@ paths:
     post:
       security: []
       description: Thông tin đăng nhập
+      operationId: handlers.login
       requestBody:
         required: true
         content:
@@ -36,6 +37,7 @@ paths:
   /auth/refresh:
     post:
       security: []
+      operationId: handlers.refresh
       requestBody:
         required: true
         content: 
@@ -62,6 +64,7 @@ paths:
           type: integer
           minimum: 1
     get:
+      operationId: handlers.get_post
       security:
         - oauth2: [read:posts]
       responses: 
@@ -93,6 +96,7 @@ components:
       name: X-API-Key
     oauth2:
       type: oauth2
+      x-tokenInfoFunc: handlers.token_info
       description: Nhập JWT Token có chứa các scope tương ứng.
       flows:
         authorizationCode: # Hoặc clientCredentials / implicit tùy mô hình
