@@ -3,3 +3,4 @@
 (base) PS D:\ĐH\SOA\api_session_04> python -m venv .venv
 (base) PS D:\ĐH\SOA\api_session_04> .\.venv\Scripts\activate.ps1
 (.venv) (base) PS D:\ĐH\SOA\api_session_04> pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m flask --app wsgi run --debug
