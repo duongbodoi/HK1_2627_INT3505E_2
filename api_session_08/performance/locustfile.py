@@ -41,3 +41,18 @@ class BooksUser(HttpUser):
 
     # LAB 4: add search_by_year() and explain any injected failures.
     # A client-side artificial failure is not a real HTTP 500 from the server.
+    @task(1)
+    def search_by_year(self):
+        year = random.randint(1990, 2023)
+        with self.client.get(
+            "/books", params={"year": year},
+            name="GET /books?year={year}", catch_response=True,
+        ) as response:
+            # 1% failure GIẢ LẬP phía client (Locust response.failure()).
+            # KHÔNG phải HTTP 500 từ server: server vẫn trả 200.
+            if random.random() < 0.01:
+                response.failure("Simulated failure (client-side, 1%)")
+            elif response.status_code == 200:
+                response.success()
+            else:
+                response.failure(f"Unexpected status {response.status_code}")    
