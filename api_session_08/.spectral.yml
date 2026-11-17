@@ -1,21 +1,44 @@
+# Ruleset cho Lab 2 — chạy: spectral lint openapi.yaml --ruleset .spectral.yml
 extends: ["spectral:oas"]
 
 rules:
-  info-contact: off
-  operation-description: off
-  operation-tags: off
+  # Lỗi 1: spectral:oas mặc định chỉ đặt operationId ở mức "warn".
+  # Warn KHÔNG làm lint fail (exit code vẫn 0) -> nâng lên "error" để CI chặn được.
+  operation-operationId: error
 
+  # Lỗi 2: HTTP 204 = No Content, không được khai báo response body.
   no-body-on-204:
-    description: Response 204 không được khai báo content.
+    description: "Response 204 không được có 'content' (204 không có body)."
     severity: error
     given: "$.paths[*][*].responses['204']"
     then:
       field: content
       function: falsy
-  book-is-integer/null:
-    description: Khác với mô hình book dự kiến integer
+
+  # Lỗi 3: model Python Book.year là Integer -> spec phải là integer.
+  book-year-must-be-integer:
+    description: "Book.year phải là integer (khớp models.py: db.Integer)."
     severity: error
     given: "$.components.schemas.Book.properties.year"
     then:
       field: type
-      function: 
+      function: enumeration
+      functionOptions:
+        values: [integer]
+
+  # Custom rule của riêng bạn: response 200 phải mô tả được dữ liệu trả về
+  # (object có >= 1 property, hoặc array có items). Bắt schema rỗng kiểu {type: object}.
+  response-200-schema-not-empty:
+    description: "Schema của response 200 phải có ít nhất 1 trường (properties) hoặc items."
+    message: "Response 200 có schema rỗng — hãy khai báo properties hoặc items."
+    severity: error
+    given: "$.paths[*][*].responses['200'].content['application/json'].schema"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - required: [properties]
+              properties:
+                properties: {type: object, minProperties: 1}
+            - required: [items]
