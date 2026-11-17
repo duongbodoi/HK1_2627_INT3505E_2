@@ -2,15 +2,23 @@ openapi: 3.0.3
 info:
   title: Books API — Lab 08
   version: 1.0.0
+  contact:                    # ← thêm
+    name: Lab 08 TA           # ← thêm
+    email: duongbodoi11@gmail.com     # ← thêm (ghi tên/email của bạn cũng được)
   description: |
     Educational API. LAB 2: three *intentional* contract defects remain.
     The application is the reference for intended behavior.
 servers:
   - url: http://localhost:5000
+tags:                                                    # ← thêm
+  - {name: health, description: Kiểm tra trạng thái service}
+  - {name: books, description: Quản lý sách}
 paths:
   /health:
     get:
       operationId: healthCheck
+      description: Kiểm tra service còn sống.     # ← thêm
+      tags: [health]
       responses:
         '200':
           description: Service is ready
@@ -24,6 +32,8 @@ paths:
     get:
       # LAB 2 intentional issue 1: operationId is missing.
       operationId: listBooks
+      description: Liệt kê sách, lọc theo author/year, phân trang.     # ← thêm
+      tags: [books]
       parameters:
         - in: query
           name: author
@@ -44,6 +54,8 @@ paths:
                 items: {$ref: '#/components/schemas/Book'}
     post:
       operationId: createBook
+      description: KTạo sách mới; 409 nếu ISBN trùng.     # ← thêm
+      tags: [books] 
       requestBody:
         required: true
         content:
@@ -65,6 +77,8 @@ paths:
         schema: {type: integer, minimum: 1}
     get:
       operationId: getBook
+      description: Lấy chi tiết một sách theo id.     # ← thêm
+      tags: [books] 
       responses:
         '200':
           description: Book found
@@ -74,6 +88,8 @@ paths:
         '404': {$ref: '#/components/responses/NotFound'}
     put:
       operationId: updateBook
+      description: Thay thế toàn bộ các trường của sách.     # ← thêm
+      tags: [books] 
       requestBody:
         required: true
         content:
@@ -89,6 +105,8 @@ paths:
         '404': {$ref: '#/components/responses/NotFound'}
     delete:
       operationId: deleteBook
+      description: Xoá một sách; 204 không có body.     # ← thêm
+      tags: [books] 
       responses:
         '204':
           description: Deleted (response has no body)
