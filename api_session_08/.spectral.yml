@@ -1,0 +1,21 @@
+extends: ["spectral:oas"]
+
+rules:
+  info-contact: off
+  operation-description: off
+  operation-tags: off
+
+  no-body-on-204:
+    description: Response 204 không được khai báo content.
+    severity: error
+    given: "$.paths[*][*].responses['204']"
+    then:
+      field: content
+      function: falsy
+  book-is-integer/null:
+    description: Khác với mô hình book dự kiến integer
+    severity: error
+    given: "$.components.schemas.Book.properties.year"
+    then:
+      field: type
+      function: 
